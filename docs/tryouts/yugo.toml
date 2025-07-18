@@ -1,0 +1,24 @@
+[game] 
+name = "Game1"
+entry_point = "./Game1Exec"
+version = "1.2.0"
+
+[build] 
+app_type = "native"
+dependencies = [ "sdl", "libvlc", "pie", "python3" ]
+ignore = [ ".git", ".gitignore", "somethingNotThatImportant", "trash" ]
+
+[build.profile.release]
+opt_level = 3
+
+[build.profile.debug]
+opt_level = 0
+
+[env]
+env_vars = [ "WAYLAND_DISPLAY=0","XDG_SESSION_TYPE=wayland", "XXX=000" ]
+
+[metadata]
+author = "someone"
+description = "This game is awesome!"
+license = "MIT"
+
