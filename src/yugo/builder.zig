@@ -1,0 +1,9 @@
+// TASK: CREATE A CONTAINER FROM THE INFORMATION RECEIVED ON THE MAPPER. EXPLANATION BELOW
+// READ THE MAPPER
+// COPY THE FILES TO THE CONTAINER
+
+const Builder = @This();
+
+path: []const u8,
+
+pub fn make() !void {}

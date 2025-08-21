@@ -1,0 +1,23 @@
+# Yugo Development Journal
+
+Today(2025-08-21), I pick up on the Yugo project. Each and each day I spent time using NixOs, this necessity grew more and more. I need this runtime to build my 
+linux distribution around it just like Nix, but this time without that carying on nix problems and bad ecossytem.
+
+The yugo idea file still needs to be worked on which is going to become the readme of this project.
+
+Right now this is what I've achieved on the project so far:
+
+- Can parse a yugo.toml file 
+- Can create containers from scratch
+
+With that in mind I plan to trace the current state of the project to map where I am(which is what im doing rn) and:
+
+- Make a mapper that scans the file and creates the container based on the configuration that was passed to it
+
+For this to be executed correctly and not fuck up my computer, I have to create a development environment in a docker container for safety and then 
+start putting the containers to test. So the plan now is:
+
+1º Create a development environment in a docker container
+2º Create a mapper that can scan the file in a directory, read it and make a container of it
+3º Test and evolve from there
+
