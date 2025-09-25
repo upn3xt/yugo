@@ -1,9 +1,10 @@
 // TASK: CREATE A CONTAINER FROM THE INFORMATION RECEIVED ON THE MAPPER. EXPLANATION BELOW
 // READ THE MAPPER
-// COPY THE FILES TO THE CONTAINER
+// COPY THE FILES TO eeeeCONTAINER
 
 const std = @import("std");
 const linux = std.os.linux;
+const eql = std.mem.eql;
 
 const ArgsWrapper = struct {
     args: []const []const u8,
@@ -11,24 +12,42 @@ const ArgsWrapper = struct {
 
 const Builder = @This();
 
-/// Make is responsible for the creation of the container
-/// It's basically where all will happen
-pub fn make() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
+/// Makes all shit start
+pub fn entry() !void {
+    var abuf: [1024]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&abuf);
+    const allocator = fba.allocator();
 
-    const allocator = arena.allocator();
+    const raw = try std.process.argsAlloc(allocator);
+    defer allocator.free(raw);
+    const args = raw[1..];
 
-    const args = std.process.argsAlloc(allocator) catch return;
+    const arg1 = args[0];
+    const arg2 = args[1..];
 
-    if (args.len <= 1) {
-        std.debug.print("Try a valid command.\n", .{});
-        return;
+    if (eql(u8, arg1, "setup")) {
+        _ = std.process.getEnvVarOwned(allocator, "HOME") catch |e| {
+            std.debug.print("HOME environment variable was not found.\n", .{});
+            return e;
+        };
+    } else if (eql(u8, arg1, "list")) {
+        // list worlds
+    } else if (eql(u8, arg1, "build")) {} else if (eql(u8, arg1, "run")) {
+        try run(allocator, arg2);
+    } else if (eql(u8, arg1, "help")) {
+        std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
+        // show help command
+        // TODO: MAKE HELP COMMAND
+    } else {
+        std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
     }
+    return;
+}
 
-    const command_args = args[1..];
+/// Runs stuff
+pub fn run(allocator: std.mem.Allocator, args: [][:0]u8) !void {
     const wrapper = try allocator.create(ArgsWrapper);
-    wrapper.args = command_args;
+    wrapper.args = args;
     try cloneWrapper(process, @intFromPtr(wrapper));
 }
 
@@ -62,7 +81,7 @@ pub fn process(argv: usize) callconv(.c) u8 {
     std.debug.print("Running {s} as PID {}...\n", .{ args[0], linux.getpid() });
 
     try containerize();
-    runCommand(allocator, args) catch |e| {
+    bgCommand(allocator, args) catch |e| {
         std.debug.print("Error while trying to execute command: {}\n", .{e});
         return 1;
     };
@@ -79,7 +98,22 @@ pub fn containerize() !void {
     _ = linux.mount("proc", "/proc", "proc", mount_flags, 0);
 }
 
-pub fn runCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
+pub fn bgCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    var processx = std.process.Child.init(args, allocator);
+
+    processx.stdin_behavior = .Ignore;
+    processx.stdout_behavior = .Pipe;
+    processx.stderr_behavior = .Pipe;
+
+    try processx.spawn();
+    std.debug.print("New process(# {}) running.\n", .{processx.id});
+}
+
+pub fn isRunning(pid: i32) bool {
+    return linux.kill(pid, 0) == 0;
+}
+
+pub fn itCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
     var processx = std.process.Child.init(args, allocator);
 
     processx.stdin_behavior = .Inherit;

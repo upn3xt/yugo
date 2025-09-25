@@ -35,12 +35,12 @@
     // `zig build --fetch` can be used to fetch all dependencies of a package, recursively.
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
-    .dependencies = .{
-        .toml = .{
-            .url = "git+https://github.com/sam701/zig-toml#d40d86763e5051203432bae4c92503995f643883",
-            .hash = "toml-0.3.0-bV14BWR6AQDG5UJ5q2jo4eCHIsRqh12SbMVvjHP1HNQT",
-        },
-    },
+    // .dependencies = .{
+    //     .toml = .{
+    //         .url = "git+https://github.com/sam701/zig-toml#d40d86763e5051203432bae4c92503995f643883",
+    //         .hash = "toml-0.3.0-bV14BWR6AQDG5UJ5q2jo4eCHIsRqh12SbMVvjHP1HNQT",
+    //     },
+    // },
     .paths = .{
         "build.zig",
         "build.zig.zon",
