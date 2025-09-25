@@ -1,7 +1,3 @@
-// TASK: CREATE A CONTAINER FROM THE INFORMATION RECEIVED ON THE MAPPER. EXPLANATION BELOW
-// READ THE MAPPER
-// COPY THE FILES TO eeeeCONTAINER
-
 const std = @import("std");
 const linux = std.os.linux;
 const eql = std.mem.eql;
@@ -36,8 +32,6 @@ pub fn entry() !void {
         try run(allocator, arg2);
     } else if (eql(u8, arg1, "help")) {
         std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
-        // show help command
-        // TODO: MAKE HELP COMMAND
     } else {
         std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
     }
@@ -126,5 +120,15 @@ pub fn itCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
         .Exited => {},
         .Signal => |sig| std.debug.print("Process exited with signal {}.\n", .{sig}),
         else => |e| std.debug.print("Unexpected behavior. Error:{}\n", .{e}),
+    }
+}
+
+pub fn copyFiles(source: []const u8, dest: []const u8) !void {
+    var current_path = try std.fs.cwd().openDir(source, .{ .iterate = true });
+    var dest_path = try std.fs.cwd().openDir(dest, .{});
+
+    const it = current_path.iterate();
+    while (try it.next()) |entryx| {
+        try dest_path.copyFile(current_path, entryx.name, dest_path, entryx.name, .{});
     }
 }
