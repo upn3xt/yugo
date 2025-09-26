@@ -1,5 +1,0 @@
-[entry]
-name = "somecode"
-entry_point = "./code.c"
-version = "1.0"
-
