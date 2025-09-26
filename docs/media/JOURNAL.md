@@ -43,3 +43,10 @@ server to test it with other programs besides bash. As I'm writing this, I suspe
 So it can't execute. (Got this while I was shitting).
 
 As I suspected, it was that! HAHAHAHAHHA, BACKGROUND J*BS BABY! 
+
+
+## Still messy but this time...
+
+Today I did the thing. Porting the objects to the container(a yugo one). Works as it should, when you do `yugo run directory/ bash` you get inside the container 
+with the directory which was placed the yugo file and the call of the command and copy everything. Then you can call the object however you'd wish. But there's 
+something missing, actually a couple of things: background jobs execution on the fly and a way to list instance of my containers. That's the next step.

@@ -19,7 +19,8 @@ pub fn entry() !void {
     const args = raw[1..];
 
     const arg1 = args[0];
-    const arg2 = args[1..];
+    const arg2 = args[1];
+    const arg3 = args[2..];
 
     if (eql(u8, arg1, "setup")) {
         _ = std.process.getEnvVarOwned(allocator, "HOME") catch |e| {
@@ -29,7 +30,8 @@ pub fn entry() !void {
     } else if (eql(u8, arg1, "list")) {
         // list worlds
     } else if (eql(u8, arg1, "build")) {} else if (eql(u8, arg1, "run")) {
-        try run(allocator, arg2);
+        try copyFiles(arg2, "/rootfs");
+        try run(allocator, arg3);
     } else if (eql(u8, arg1, "help")) {
         std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
     } else {
@@ -75,7 +77,7 @@ pub fn process(argv: usize) callconv(.c) u8 {
     std.debug.print("Running {s} as PID {}...\n", .{ args[0], linux.getpid() });
 
     try containerize();
-    bgCommand(allocator, args) catch |e| {
+    itCommand(allocator, args) catch |e| {
         std.debug.print("Error while trying to execute command: {}\n", .{e});
         return 1;
     };
@@ -125,10 +127,18 @@ pub fn itCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
 pub fn copyFiles(source: []const u8, dest: []const u8) !void {
     var current_path = try std.fs.cwd().openDir(source, .{ .iterate = true });
-    var dest_path = try std.fs.cwd().openDir(dest, .{});
 
-    const it = current_path.iterate();
+    var dest_path = try std.fs.cwd().openDir(dest, .{});
+    try dest_path.makeDir(source);
+
+    var buf: [1024]u8 = undefined;
+    const concatn = try std.fmt.bufPrint(&buf, "{s}/{s}", .{ dest, source });
+    const final_path = try std.fs.cwd().openDir(concatn, .{});
+
+    var it = current_path.iterate();
     while (try it.next()) |entryx| {
-        try dest_path.copyFile(current_path, entryx.name, dest_path, entryx.name, .{});
+        try current_path.copyFile(entryx.name, final_path, entryx.name, .{});
     }
 }
+
+pub fn runDetached() !void {}
