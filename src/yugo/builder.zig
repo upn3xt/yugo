@@ -32,8 +32,7 @@ pub fn entry() !void {
     } else if (eql(u8, main_command, "build")) {
         // something here
     } else if (eql(u8, main_command, "run")) {
-        try copyFiles(path, "/rootfs");
-        try run(allocator, extra);
+        try run(allocator, path, extra);
     } else if (eql(u8, main_command, "ir")) {
         const pid = try std.fmt.parseInt(i32, extra[0], 10);
         if (isRunning(pid)) {
@@ -48,9 +47,11 @@ pub fn entry() !void {
 }
 
 /// Runs stuff
-pub fn run(allocator: std.mem.Allocator, args: [][:0]u8) !void {
+pub fn run(allocator: std.mem.Allocator, path: []const u8, args: [][:0]u8) !void {
     const wrapper = try allocator.create(ArgsWrapper);
     wrapper.args = args;
+
+    try copyFiles(path, "/rootfs");
     try cloneWrapper(process, @intFromPtr(wrapper));
 }
 
@@ -85,7 +86,11 @@ pub fn process(argv: usize) callconv(.c) u8 {
 
     try containerize();
     if (eql(u8, args[0], ""))
-        itCommand(allocator, args) catch |e| {
+        // itCommand(allocator, args) catch |e| {
+        //     std.debug.print("Error while trying to execute command: {}\n", .{e});
+        //     return 1;
+        // };
+        runDetached(allocator, args) catch |e| {
             std.debug.print("Error while trying to execute command: {}\n", .{e});
             return 1;
         };
@@ -134,7 +139,7 @@ pub fn copyFiles(source: []const u8, dest: []const u8) !void {
 
     var it = current_path.iterate();
     while (try it.next()) |entryx| {
-        try current_path.copyFile(entryx.name, final_path, entryx.name, .{});
+        current_path.copyFile(entryx.name, final_path, entryx.name, .{}) catch {};
     }
 }
 
