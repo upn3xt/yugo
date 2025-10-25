@@ -18,21 +18,28 @@ pub fn entry() !void {
     defer allocator.free(raw);
     const args = raw[1..];
 
-    const arg1 = args[0];
-    const arg2 = args[1];
-    const arg3 = args[2..];
+    const main_command = args[0];
+    const path = args[1];
+    const extra = args[2..];
 
-    if (eql(u8, arg1, "setup")) {
+    if (eql(u8, main_command, "setup")) {
         _ = std.process.getEnvVarOwned(allocator, "HOME") catch |e| {
             std.debug.print("HOME environment variable was not found.\n", .{});
             return e;
         };
-    } else if (eql(u8, arg1, "list")) {
+    } else if (eql(u8, main_command, "list")) {
         // list worlds
-    } else if (eql(u8, arg1, "build")) {} else if (eql(u8, arg1, "run")) {
-        try copyFiles(arg2, "/rootfs");
-        try run(allocator, arg3);
-    } else if (eql(u8, arg1, "help")) {
+    } else if (eql(u8, main_command, "build")) {
+        // something here
+    } else if (eql(u8, main_command, "run")) {
+        try copyFiles(path, "/rootfs");
+        try run(allocator, extra);
+    } else if (eql(u8, main_command, "ir")) {
+        const pid = try std.fmt.parseInt(i32, extra[0], 10);
+        if (isRunning(pid)) {
+            std.debug.print("Process is running.\n", .{});
+        } else std.debug.print("Process not running.\n", .{});
+    } else if (eql(u8, main_command, "help")) {
         std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
     } else {
         std.debug.print("USAGE: yugo <command>\nInvalid command, try \'help\' to see the list of the available commands\n", .{});
@@ -77,10 +84,11 @@ pub fn process(argv: usize) callconv(.c) u8 {
     std.debug.print("Running {s} as PID {}...\n", .{ args[0], linux.getpid() });
 
     try containerize();
-    itCommand(allocator, args) catch |e| {
-        std.debug.print("Error while trying to execute command: {}\n", .{e});
-        return 1;
-    };
+    if (eql(u8, args[0], ""))
+        itCommand(allocator, args) catch |e| {
+            std.debug.print("Error while trying to execute command: {}\n", .{e});
+            return 1;
+        };
     return 0;
 }
 
@@ -92,17 +100,6 @@ pub fn containerize() !void {
     _ = linux.unshare(linux.CLONE.NEWNS);
     const mount_flags = linux.MS.NOSUID | linux.MS.NOEXEC | linux.MS.NODEV;
     _ = linux.mount("proc", "/proc", "proc", mount_flags, 0);
-}
-
-pub fn bgCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
-    var processx = std.process.Child.init(args, allocator);
-
-    processx.stdin_behavior = .Ignore;
-    processx.stdout_behavior = .Pipe;
-    processx.stderr_behavior = .Pipe;
-
-    try processx.spawn();
-    std.debug.print("New process(# {}) running.\n", .{processx.id});
 }
 
 pub fn isRunning(pid: i32) bool {
@@ -119,7 +116,7 @@ pub fn itCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
     const result = try processx.spawnAndWait();
 
     switch (result) {
-        .Exited => {},
+        .Exited => try processx.kill(),
         .Signal => |sig| std.debug.print("Process exited with signal {}.\n", .{sig}),
         else => |e| std.debug.print("Unexpected behavior. Error:{}\n", .{e}),
     }
@@ -141,4 +138,13 @@ pub fn copyFiles(source: []const u8, dest: []const u8) !void {
     }
 }
 
-pub fn runDetached() !void {}
+pub fn runDetached(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    var processx = std.process.Child.init(args, allocator);
+
+    processx.stdin_behavior = .Pipe;
+    processx.stdout_behavior = .Pipe;
+    processx.stderr_behavior = .Pipe;
+
+    try processx.spawn();
+    std.debug.print("New process(# {}) running.\n", .{processx.id});
+}

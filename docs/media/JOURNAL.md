@@ -50,3 +50,8 @@ As I suspected, it was that! HAHAHAHAHHA, BACKGROUND J*BS BABY!
 Today I did the thing. Porting the objects to the container(a yugo one). Works as it should, when you do `yugo run directory/ bash` you get inside the container 
 with the directory which was placed the yugo file and the call of the command and copy everything. Then you can call the object however you'd wish. But there's 
 something missing, actually a couple of things: background jobs execution on the fly and a way to list instance of my containers. That's the next step.
+
+
+## Too messy for not to do something about it
+
+I guess is time to try a new approach with the CLI. Using the file to determine certain aspects of the container. 
