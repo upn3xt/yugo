@@ -19,8 +19,6 @@ pub fn entry() !void {
     const args = raw[1..];
 
     const main_command = args[0];
-    const path = args[1];
-    const extra = args[2..];
 
     if (eql(u8, main_command, "setup")) {
         _ = std.process.getEnvVarOwned(allocator, "HOME") catch |e| {
@@ -32,9 +30,12 @@ pub fn entry() !void {
     } else if (eql(u8, main_command, "build")) {
         // something here
     } else if (eql(u8, main_command, "run")) {
+        const path = args[1];
+        const extra = args[2..];
         try run(allocator, path, extra);
     } else if (eql(u8, main_command, "ir")) {
-        const pid = try std.fmt.parseInt(i32, extra[0], 10);
+        const num = args[1];
+        const pid = try std.fmt.parseInt(i32, num, 10);
         if (isRunning(pid)) {
             std.debug.print("Process is running.\n", .{});
         } else std.debug.print("Process not running.\n", .{});
@@ -72,6 +73,7 @@ pub fn cloneWrapper(func: *const fn (usize) callconv(.c) u8, argv: usize) !void 
 
     const pid: i32 = @intCast(pid_usize);
 
+    std.debug.print("PROCESS #{}\n", .{pid});
     var status: u32 = 0;
     _ = std.os.linux.waitpid(pid, &status, 0);
 }
@@ -82,18 +84,11 @@ pub fn process(argv: usize) callconv(.c) u8 {
     const wrapper: *ArgsWrapper = @ptrFromInt(argv);
     const args = wrapper.args;
 
-    std.debug.print("Running {s} as PID {}...\n", .{ args[0], linux.getpid() });
-
     try containerize();
-    // if (eql(u8, args[0], ""))
-    itCommand(allocator, args) catch |e| {
+    runCommand(allocator, args) catch |e| {
         std.debug.print("Error while trying to execute command: {}\n", .{e});
         return 1;
     };
-    // runDetached(allocator, args) catch |e| {
-    //     std.debug.print("Error while trying to execute command: {}\n", .{e});
-    //     return 1;
-    // };
     return 0;
 }
 
@@ -153,14 +148,13 @@ pub fn copyFiles(source: []const u8, dest: []const u8) !void {
     }
 }
 
-pub fn runDetached(allocator: std.mem.Allocator, args: []const []const u8) !void {
+pub fn runCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
     var processx = std.process.Child.init(args, allocator);
 
-    processx.stdin_behavior = .Pipe;
+    processx.stdin_behavior = .Inherit;
     processx.stdout_behavior = .Inherit;
-    processx.stderr_behavior = .Pipe;
+    processx.stderr_behavior = .Inherit;
 
     try processx.spawn();
-    std.debug.print("{s}\n", .{processx.stdout});
-    std.debug.print("New process(# {}) running.\n", .{processx.id});
+    // std.debug.print("New process(# {}) running.\n", .{processx.id});
 }
