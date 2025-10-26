@@ -85,15 +85,15 @@ pub fn process(argv: usize) callconv(.c) u8 {
     std.debug.print("Running {s} as PID {}...\n", .{ args[0], linux.getpid() });
 
     try containerize();
-    if (eql(u8, args[0], ""))
-        // itCommand(allocator, args) catch |e| {
-        //     std.debug.print("Error while trying to execute command: {}\n", .{e});
-        //     return 1;
-        // };
-        runDetached(allocator, args) catch |e| {
-            std.debug.print("Error while trying to execute command: {}\n", .{e});
-            return 1;
-        };
+    // if (eql(u8, args[0], ""))
+    itCommand(allocator, args) catch |e| {
+        std.debug.print("Error while trying to execute command: {}\n", .{e});
+        return 1;
+    };
+    // runDetached(allocator, args) catch |e| {
+    //     std.debug.print("Error while trying to execute command: {}\n", .{e});
+    //     return 1;
+    // };
     return 0;
 }
 
@@ -121,7 +121,7 @@ pub fn itCommand(allocator: std.mem.Allocator, args: []const []const u8) !void {
     const result = try processx.spawnAndWait();
 
     switch (result) {
-        .Exited => try processx.kill(),
+        .Exited => _ = try processx.kill(),
         .Signal => |sig| std.debug.print("Process exited with signal {}.\n", .{sig}),
         else => |e| std.debug.print("Unexpected behavior. Error:{}\n", .{e}),
     }
@@ -131,7 +131,10 @@ pub fn copyFiles(source: []const u8, dest: []const u8) !void {
     var current_path = try std.fs.cwd().openDir(source, .{ .iterate = true });
 
     var dest_path = try std.fs.cwd().openDir(dest, .{});
-    try dest_path.makeDir(source);
+    _ = dest_path.openDir(source, .{}) catch {
+        try dest_path.makeDir(source);
+        return;
+    };
 
     var buf: [1024]u8 = undefined;
     const concatn = try std.fmt.bufPrint(&buf, "{s}/{s}", .{ dest, source });
@@ -139,7 +142,14 @@ pub fn copyFiles(source: []const u8, dest: []const u8) !void {
 
     var it = current_path.iterate();
     while (try it.next()) |entryx| {
-        current_path.copyFile(entryx.name, final_path, entryx.name, .{}) catch {};
+        const exists = blk: {
+            const file = dest_path.openFile(entryx.name, .{}) catch {
+                break :blk false;
+            };
+            defer file.close();
+            break :blk true;
+        };
+        if (exists) {} else current_path.copyFile(entryx.name, final_path, entryx.name, .{}) catch {};
     }
 }
 
@@ -147,9 +157,10 @@ pub fn runDetached(allocator: std.mem.Allocator, args: []const []const u8) !void
     var processx = std.process.Child.init(args, allocator);
 
     processx.stdin_behavior = .Pipe;
-    processx.stdout_behavior = .Pipe;
+    processx.stdout_behavior = .Inherit;
     processx.stderr_behavior = .Pipe;
 
     try processx.spawn();
+    std.debug.print("{s}\n", .{processx.stdout});
     std.debug.print("New process(# {}) running.\n", .{processx.id});
 }

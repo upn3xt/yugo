@@ -55,3 +55,7 @@ something missing, actually a couple of things: background jobs execution on the
 ## Too messy for not to do something about it
 
 I guess is time to try a new approach with the CLI. Using the file to determine certain aspects of the container. 
+
+## Fixed copying files issue 
+
+Yes, that's it.
