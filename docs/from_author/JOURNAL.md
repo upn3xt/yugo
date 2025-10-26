@@ -59,3 +59,9 @@ I guess is time to try a new approach with the CLI. Using the file to determine 
 ## Fixed copying files issue 
 
 Yes, that's it.
+
+
+## Manual for later
+
+Now I created a manual for when I get lost about how the current project works and an overall modification on the looks of the codebase. It's better now- Also,
+back to square one with background jobs. The weren't so background after all. And there are many cases I didn't account for. But it'll be alright.
