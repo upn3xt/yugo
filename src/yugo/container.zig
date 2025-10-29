@@ -1,6 +1,7 @@
 const std = @import("std");
 const linux = std.os.linux;
 const eql = std.mem.eql;
+const mapper = @import("mapper.zig");
 
 const ArgsWrapper = struct {
     args: []const []const u8,
@@ -27,7 +28,12 @@ pub fn entry() !void {
     } else if (eql(u8, main_command, "list")) {
         // list worlds
     } else if (eql(u8, main_command, "build")) {
-        // something here
+        if (args.len <= 1) {
+            try build();
+        }
+        if (eql(u8, args[1], "run")) {
+            try buildRun(args[2]);
+        }
     } else if (eql(u8, main_command, "run")) {
         const path = args[1];
         const extra = args[2..];
@@ -158,3 +164,12 @@ pub fn runCommand(allocator: std.mem.Allocator, args: []const []const u8) !void 
         else => |e| std.debug.print("Unexpected behavior. Error:{}\n", .{e}),
     }
 }
+
+pub fn buildRun(filepath: []const u8) !void {
+    const allocator = std.heap.page_allocator;
+    const mapy = mapper.init(allocator, filepath);
+    const yugo_file = try mapy.map();
+    std.debug.print("{s}!", .{yugo_file.entry.name});
+}
+
+pub fn build() !void {}

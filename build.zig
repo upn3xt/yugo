@@ -114,7 +114,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_lib_unit_tests.step);
     test_step.dependOn(&run_exe_unit_tests.step);
 
-    // const toml_dep = b.dependency("toml", .{ .target = target, .optimize = optimize });
-    //
-    // exe.root_module.addImport("toml", toml_dep.module("toml"));
+    const toml_dep = b.dependency("toml", .{ .target = target, .optimize = optimize });
+
+    exe.root_module.addImport("toml", toml_dep.module("toml"));
 }
