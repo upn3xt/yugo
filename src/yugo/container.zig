@@ -54,9 +54,11 @@ pub fn printHelp() void {
         \\ 
         \\ Available list of commands:
         \\ 
-        \\ run - starts container. Example: yugo run [path] [executable]
+        \\ run - runs a program in a container environment. Example: yugo run [path] [executable]
         \\ ir - `is running` checks if container's running. Example: yugo ir [pid]
         \\ help - Displays this message. Example: yugo help
+        \\
+        \\
     ;
     std.debug.print(help_text, .{});
 }

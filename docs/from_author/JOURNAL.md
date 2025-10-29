@@ -65,3 +65,17 @@ Yes, that's it.
 
 Now I created a manual for when I get lost about how the current project works and an overall modification on the looks of the codebase. It's better now- Also,
 back to square one with background jobs. The weren't so background after all. And there are many cases I didn't account for. But it'll be alright.
+
+
+## Issues 
+
+A new document called issues is now here. Is meant to be like a local github issues section.
+
+
+## Goal achieved?
+
+Just noticed that yugo is already doing what I would need a containerization tool to do: containerize a application. Just like that yknow? And now only need a 
+few things to make it better: download packages, read more complex information and make the container based on it, ensure the lifetime and safety of the 
+container and the content within.
+
+After that the ultimate goal will be: be able to talk with the container from the outside.
